@@ -52,6 +52,10 @@ class App {
     console.log(`Server listening on port ${port}...`);
   }
 
+  getServer(): http.Server {
+    return this.server;
+  }
+
   respond(res: http.ServerResponse, message: { move?: string } = {}) {
     res.setHeader("Content-Type", "application/json");
     res.end(JSON.stringify(message));

@@ -5,14 +5,16 @@ class Vector2 {
     this.x = x;
     this.y = y;
   }
-  set(x: number, y: number) {
-    this.x = x;
-    this.y = y;
+
+  get(key: string): number {
+    return this[key];
   }
-  equals(vector: Vector2) {
+
+  equals(vector: Vector2): boolean {
     return this.x == vector.x && this.y == vector.y;
   }
-  clone() {
+
+  clone(): Vector2 {
     return new Vector2(this.x, this.y);
   }
 }

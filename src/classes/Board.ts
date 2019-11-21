@@ -5,34 +5,63 @@ import {
   SNAKE_TAIL,
   FOOD_TILE
 } from "../types/Board";
+import Snake from "./Snake";
+import Floodfill from "./Floodfill";
+import Vector2 from "../util/Vector2";
 
 class Board {
   private height: number;
   private width: number;
   private grid: Array<Array<number>>;
 
+  // Object of flood grids per snake, for re-use
+  private floodGrid: Array<Array<FloodTile>>;
+
   constructor(data?: GamePayload) {
+    this.floodGrid = null;
     if (data !== undefined) {
       this.height = data.board.height;
       this.width = data.board.width;
 
-      this.resetBoard(data);
-      this.fromState(data);
+      this.grid = this.resetGrid();
+      this.floodGrid = this.resetFloodGrid();
+
+      this.fromPayload(data);
     }
   }
 
-  resetBoard(data: GamePayload) {
-    this.grid = [];
+  resetGrid(): Array<Array<number>> {
+    const grid = [];
     for (let i = 0, mapWidth = this.width; i < mapWidth; i++) {
       const column = [];
       for (let j = 0, mapHeight = this.height; j < mapHeight; j++) {
         column.push(EMPTY_TILE);
       }
-      this.grid.push(column);
+      grid.push(column);
     }
+
+    return grid;
   }
 
-  fromState(data: GamePayload) {
+  resetFloodGrid(): Array<Array<FloodTile>> {
+    const grid = [];
+    for (let i = 0, mapWidth = this.width; i < mapWidth; i++) {
+      const column = [];
+      for (let j = 0, mapHeight = this.height; j < mapHeight; j++) {
+        column.push({
+          longest: -1,
+          owner: "",
+          ownerDist: Infinity,
+          dist: Infinity
+        });
+      }
+      grid.push(column);
+    }
+
+    return grid;
+  }
+
+  fromPayload(data: GamePayload) {
     const snakes = data.board.snakes;
     for (let i = 0, snakeLength = snakes.length; i < snakeLength; i++) {
       const snake = snakes[i];
@@ -59,6 +88,29 @@ class Board {
     }
   }
 
+  flood(snake: Snake, isPlayer: boolean, food: Array<Vector2>) {
+    const head = snake.getHead();
+
+    this.floodGrid = Floodfill(
+      head.get("x"),
+      head.get("y"),
+      isPlayer,
+      snake.getId(),
+      snake.getLength(),
+      this.height,
+      this.width,
+      food,
+      this.cloneGrid(),
+      this.floodGrid
+    );
+  }
+
+  getPlayerDistance(x: number, y: number) {
+    const dist = this.floodGrid[x][y].dist;
+    if (dist === Infinity) return null;
+    return dist;
+  }
+
   get(x: number, y: number): number {
     return this.grid[x][y];
   }
@@ -79,6 +131,10 @@ class Board {
     this.grid = grid;
   }
 
+  setFloodGrid(floodGrid: Array<Array<FloodTile>>) {
+    this.floodGrid = floodGrid;
+  }
+
   print(): void {
     console.log(
       this.grid[0].map((col, i) => {
@@ -89,9 +145,30 @@ class Board {
     );
   }
 
-  clone(): Board {
-    const cloneBoard = new Board();
+  printFlood(snake: Snake): void {
+    console.log(
+      this.floodGrid[0].map((col, i) => {
+        return this.floodGrid.map(row => {
+          if (row[i].dist === Infinity) return "*";
+          return row[i].dist.toString();
+        });
+      })
+    );
+  }
 
+  printVoronoi(snake: Snake): void {
+    console.log(
+      this.floodGrid[0].map((col, i) => {
+        return this.floodGrid.map(row => {
+          if (row[i].owner == snake.getId()) {
+            return "o";
+          } else return ".";
+        });
+      })
+    );
+  }
+
+  cloneGrid(): Array<Array<number>> {
     const cloneGrid = [];
     for (let i = 0, mapWidth = this.width; i < mapWidth; i++) {
       const column = [];
@@ -101,9 +178,34 @@ class Board {
       cloneGrid.push(column);
     }
 
+    return cloneGrid;
+  }
+
+  cloneFloodGrid(): Array<Array<FloodTile>> {
+    const cloneFloodGrid = [];
+    for (let i = 0, mapWidth = this.width; i < mapWidth; i++) {
+      const column = [];
+      for (let j = 0, mapHeight = this.height; j < mapHeight; j++) {
+        const tileData = this.floodGrid[i][j];
+        column.push({
+          longest: tileData.longest,
+          owner: tileData.owner,
+          ownerDist: tileData.ownerDist
+        });
+      }
+      cloneFloodGrid.push(column);
+    }
+
+    return cloneFloodGrid;
+  }
+
+  clone(): Board {
+    const cloneBoard = new Board();
+
     cloneBoard.setHeight(this.height);
     cloneBoard.setWidth(this.width);
-    cloneBoard.setGrid(cloneGrid);
+    cloneBoard.setGrid(this.cloneGrid());
+    cloneBoard.setFloodGrid(this.cloneFloodGrid());
 
     return cloneBoard;
   }

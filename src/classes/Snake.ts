@@ -21,6 +21,14 @@ class Snake {
     return this.id;
   }
 
+  getHead(): Vector2 {
+    return this.body[0];
+  }
+
+  getLength(): number {
+    return this.body.length;
+  }
+
   clone() {
     const cloneBody = [];
     for (let i = 0, bodyLength = this.body.length; i < bodyLength; i++) {

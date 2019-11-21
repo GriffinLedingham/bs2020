@@ -8,7 +8,7 @@
     "dev": "tsc --watch & nodemon dist",
     "lint": "eslint src --ext ts",
     "tsc": "./node_modules/typescript/bin/tsc",
-    "test": "docker build -t socks . && docker run -p 3000:3000 -p 3001:3001 socks mocha --exit dist/**/*.spec.js",
+    "test": "tsc && mocha dist/**/*.spec.js -C --exit",
     "docker": "docker build -t socks . && docker run -p 3000:3000 -p 3001:3001 socks node dist"
   },
   "author": "",
