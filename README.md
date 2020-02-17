@@ -1,6 +1,6 @@
 # 2020 Battle Snake
 
-TypeScript BattleSnake server for 2020 event.
+TypeScript BattleSnake WIP project.
 
 ## Requirements
 
@@ -11,8 +11,8 @@ TypeScript BattleSnake server for 2020 event.
 
 - `yarn global add typescript`
 - `yarn install`
-- `npm run tsc`
+- `yarn tsc`
 
 ## Usage
 
-- Dev: `npm run dev`
+- Dev: `yarn dev`
